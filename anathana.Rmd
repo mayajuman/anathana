@@ -1,0 +1,488 @@
+---
+title: "anathana"
+author: "Maya Juman"
+date: "2023-03-25"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(ggfortify)
+library(plyr)
+library(MASS)
+library(dplyr)
+library(tidyverse)
+library(ggpubr)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggspatial)
+
+#load in and set up  data
+
+setwd("~/Documents/treeshrews/anathana/initial submission")
+
+#anathana
+anathana <- readxl::read_excel("Juman et al. Anathana supplementary information.xlsx",
+                               sheet="Anathana Data")
+anathana$Number <- as.character(anathana$Number)
+ana <- anathana %>% dplyr::select(INST, Number, Genus, Species, Subspecies,
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+#palawanensis
+palawanensis <- readxl::read_excel("Juman et al. Anathana supplementary information.xlsx",
+                                   sheet="Tupaia palawanensis Data")
+palaALL <- palawanensis %>% dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, LB, ZB, BB, LPL, CNL,
+                            PBPL, LTPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+palawanensis <- palawanensis %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+palawanensis$Species <- "palawanensis"
+
+palawanensis$UTL <- as.numeric(palawanensis$UTL)
+palawanensis$BB <- as.numeric(palawanensis$BB)
+palawanensis$LPL <- as.numeric(palawanensis$LPL)
+palawanensis$PBPL <- as.numeric(palawanensis$PBPL)
+palawanensis$MH <- as.numeric(palawanensis$MH)
+palawanensis$MCW <- as.numeric(palawanensis$MCW)
+palawanensis$MCH <- as.numeric(palawanensis$MCH)
+palawanensis$Number <- as.character(palawanensis$Number)
+
+#dendrogale
+
+dendro <- readxl::read_excel("Juman et al. Anathana supplementary information.xlsx",
+                                   sheet="Dendrogale melanura Data")
+
+dendro <- dendro %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+dendro$Number <- as.character(dendro$Number)
+dendro$UTL <- as.numeric(dendro$UTL)
+dendro$BB <- as.numeric(dendro$BB)
+dendro$LPL <- as.numeric(dendro$LPL)
+dendro$PBPL <- as.numeric(dendro$PBPL)
+dendro$MH <- as.numeric(dendro$MH)
+dendro$MCW <- as.numeric(dendro$MCW)
+dendro$MCH <- as.numeric(dendro$MCH)
+
+setwd("~/Documents/treeshrews/anathana")
+
+#glis
+glis <- readxl::read_excel("Sargis et al. 2018 E&E glis supp info.xlsx", sheet = 3)
+
+glis$Genus <- "Tupaia"
+glis$Species <- "glis"
+glis[glis == "NA"] <- NA
+
+glisALL <- glis %>% dplyr::rename(INST = Museum, Number = `Catalog #`) %>%
+  dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, LB, ZB, BB, LPL, CNL,
+                            PBPL, LTPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+glis <- glis %>% dplyr::rename(INST = Museum, Number = `Catalog #`) %>% 
+  dplyr::select(INST, Number, Genus, Species,  UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+glis$UTL <- as.numeric(glis$UTL)
+glis$BB <- as.numeric(glis$BB)
+glis$LPL <- as.numeric(glis$LPL)
+glis$PBPL <- as.numeric(glis$PBPL)
+glis$MH <- as.numeric(glis$MH)
+glis$MCW <- as.numeric(glis$MCW)
+glis$MCH <- as.numeric(glis$MCH)
+
+dendroALL <- readxl::read_excel("Dendrogale melanura MCZ.xlsx")
+
+dendroALL <- dendroALL %>% dplyr::rename(INST = Museum, Number = `MuseumCat#`, Species=species) %>% 
+  dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, LB, ZB, BB, LPL, CNL,
+                            PBPL, LTPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+setwd("~/Documents/papers")
+
+#belangeri
+belangeri <- readxl::read_excel("Juman et al. 2022 SciRep belangeri supplementary data.xlsx", sheet = 3)
+
+belALL <- belangeri %>% dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, LB, ZB, BB, LPL, CNL,
+                            PBPL, LTPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+#smaller (adjacent) belangeri subset
+bel <- belangeri %>% filter(Latitude > 26.5 | Longitude < 92.5) %>% filter (Longitude < 97)
+#bel <- belangeri %>% filter(Longitude < 92.5)
+
+belangeri <- belangeri %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+belangeri$Species <- "belangeri"
+
+bel <- bel %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH, Subspecies) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+#tana
+tana <- readxl::read_excel("Juman et al. 2021 tana supplementary data.xlsx", sheet = 6)
+
+tanaALL <- tana %>% dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, LB, ZB, BB, LPL, CNL,
+                            PBPL, LTPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+tana <- tana %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+#minor
+minor <- readxl::read_excel("Juman et al. 2022 minor supplementary data.xlsx", sheet = 6)
+
+minorALL <- minor %>% dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, LB, ZB, BB, LPL, CNL,
+                            PBPL, LTPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+minor <- minor %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+#ptilo
+ptilo <- readxl::read_excel("Juman et al. 2021 Ptilo supplementary data.xlsx", sheet = 2)
+
+ptiloALL <- ptilo %>% dplyr::select(INST, Number, Genus, Species, 
+                            CPL, CIL, UTL, MTL, PPL, MB, ZB, BB, LPL, CNL,
+                            PBPL, LCH, MH, MCH, MCW, MCIL, LTL)
+
+ptilo <- ptilo %>% dplyr::select(INST, Number, Genus, Species, 
+                            UTL, BB, LPL, PBPL, MH, MCW, MCH) %>% 
+  drop_na(UTL, BB, LPL, PBPL, MH, MCW, MCH)
+
+anabel <- bind_rows(ana, bel)
+anabel[,(6:12)] <- log(anabel[,(6:12)])
+
+all <- bind_rows(ana, belangeri, glis, minor, palawanensis, ptilo, tana, dendro)
+all[,(6:12)] <- log(all[,(6:12)])
+```
+
+```{r}
+#map(s?)
+
+theme_set(theme_bw())
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+anathana$agebucket <- NA
+anathana$agebucket[anathana$Age == "Adult"] <- "Adult"
+anathana$agebucket[anathana$Age !="Adult"] <- "Non-adult"
+
+anathana$Subspecies[anathana$Subspecies == "ellioti"] <- "ellioti"
+anathana$Subspecies[anathana$Subspecies == "pallida"] <- '"pallida"'
+anathana$Subspecies[anathana$Subspecies == "wroughtoni"] <- '"wroughtoni"'
+anathana$Subspecies <- relevel(factor(anathana$Subspecies), ref="ellioti")
+
+map <- ggplot(data = world) + geom_sf() +
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank(),
+        axis.text.x=element_text(size=6), axis.text.y=element_text(size=6),
+        panel.grid.major = element_line(colour = "transparent"), 
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=1)) +
+    geom_point(data = anathana, 
+               aes(x = Longitude, y = Latitude, shape = agebucket), 
+               size = 3, fill = "black") + 
+  coord_sf(xlim = c(95,68), ylim = c(5,37), expand = FALSE) + 
+  xlab("Longitude") + ylab("Latitude") + 
+  scale_shape_manual(values = c(19,17,18,16), 
+                     guide = guide_legend(label.theme = element_text(angle = 0, 
+                                                                    size=9))) + 
+  theme(legend.title = element_blank(), 
+        legend.box.background = element_rect(color="black", size=0.4)) + 
+  theme(legend.position = c(0.75,0.1),
+        legend.spacing.x = unit(1, 'mm'), 
+        legend.key.size = unit(5, 'mm'), 
+        legend.background = element_rect(color = "white", 
+                                         linetype = "solid", size=1)) +
+  annotation_scale(location = "bl", width_hint = 0.18) +
+    annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.2, "in"), pad_y = unit(0.3, "in"), 
+        height = unit(1, "cm"),
+        width = unit(1, "cm"),
+        style = north_arrow_fancy_orienteering)
+
+#ggsave(map,file="Fig1.tiff",width=84, height=100, dpi=600, units="mm")
+
+map2 <- ggplot(data = world) + geom_sf() +
+  theme(axis.title=element_blank(), axis.text=element_text(size=5), 
+        panel.grid.major = element_line(colour = "transparent"), 
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=1)) +
+    geom_point(data = anathana[1:12,], 
+               aes(x = Longitude, y = Latitude, shape = Subspecies), 
+               size = 2, fill = "black") + 
+  coord_sf(xlim = c(95,68), ylim = c(5,37), expand = FALSE) + 
+  xlab("Longitude") + ylab("Latitude") + 
+  scale_shape_manual(values = c(19,15,17), 
+                     guide = guide_legend(label.theme = element_text(angle = 0,
+                                                                    face = "italic",
+                                                                    size=7))) + 
+  theme(legend.title = element_blank(), 
+        legend.box.background = element_rect(color="black", size=0.4)) + 
+  theme(legend.position = c(0.76,0.17),
+        legend.spacing.x = unit(0.1, 'cm'),
+        legend.spacing.y = unit(0.01, 'cm'),
+        legend.key.size = unit(4, 'mm'),
+        legend.margin = margin(2, 0, 2, 0),
+        legend.background = element_rect(color = "white", 
+                                         linetype = "solid", size=1)) +
+  annotation_scale(location = "bl", width_hint = 0.1) +
+    annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.1, "in"), pad_y = unit(0.28, "in"), 
+        height = unit(6, "mm"),
+        width = unit(6, "mm"),
+        style = north_arrow_fancy_orienteering)
+
+#ggsave(map2,file="map2.jpg",width=120, height=140, units="mm")
+```
+
+```{r}
+#species PCA 1 (neighboring belangeri)
+#UTL, BB, LPL, PBPL, MH, MCW, MCH
+
+pca <- princomp(anabel[,(6:12)], cor=TRUE)
+anabel$pc1 <- pca$scores[,1]
+anabel$pc2 <- pca$scores[,2]
+
+anabel[anabel$Genus == "Tupaia",]$Genus <- "Tupaia belangeri"
+anabel[anabel$Genus == "Anathana",]$Genus <- "Anathana ellioti"
+
+for (i in 1:7) {
+  pca$loadings[,i] <- (pca$loadings[,i] * pca$sdev[i])
+}
+
+print(summary(pca),digits=2) #importance of components
+print(pca[["loadings"]], cutoff=0) #loadings
+round(pca$sdev^2,2) #eigenvalues (i.e. squared standard dv)
+
+find_hullpcr <- function(anabel) anabel[chull(anabel$pc1, anabel$pc2), ]
+hullspcr <- ddply(anabel, "Genus", find_hullpcr)
+m <- c("grey90", "grey60")
+
+pcaplot <- ggplot(data = anabel, aes(x=pc1, y=pc2, group=Genus)) + 
+  geom_polygon(data=hullspcr, alpha=0.5, 
+               aes(x=pc1, y=pc2, group=Genus, fill=Genus, linetype=Genus), 
+               color="black") + 
+  geom_point(aes(shape=Genus), fill="white", size=3) + 
+  scale_fill_manual(values=m, guide="none") + theme_bw() + 
+  scale_shape_manual(values = c(23,16), 
+                     guide = guide_legend(label.theme = element_text(angle = 0, 
+                                                                     face = "plain", 
+                                                                     size=8))) + 
+  geom_vline(aes(xintercept = 0), size=0.25) + 
+  scale_linetype_manual(values=c(2,1)) + 
+  geom_hline(aes(yintercept = 0), size=0.25) + 
+  xlab("PC1 (82.92%)") + ylab("PC2 (7.52%)") + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(legend.box = "vertical", legend.position = c(0.25,0.88), 
+        legend.spacing.x = unit(2, 'mm'), legend.text=element_text(size=1), 
+        legend.key.size = unit(1, 'mm'), legend.title = element_blank())  + 
+  theme(axis.text = element_text(color="black", size=6),
+        axis.title = element_text(size=8)) + 
+  guides(shape = guide_legend(byrow = TRUE, 
+                              label.theme = element_text(angle = 0, 
+                                                         face = "italic", 
+                                                         size=8))) + 
+  theme(legend.spacing.y = unit(2, "mm")) + guides(fill="none", linetype="none")
+
+#ggsave("PCA1.png", width = 6.5, height = 4, bg="white")
+
+#DFA: anathana vs. neighboring belangeri
+#####100% with and without cross validation
+
+lin <- lda(anabel[,-c(1:5)],grouping=anabel$Genus, CV = TRUE)
+#ctraw <- table(anabel$Genus, predict(lin)$class) #for CV = FALSE
+ctraw <- table(anabel$Genus, lin$class) #for CV = TRUE
+ctraw #rows are actual count and columns are predicted count
+# total percent correct
+round(sum(diag(prop.table(ctraw))),4)
+
+#size correction with geometric mean
+anabelgm <- anabel
+
+gmn = function(x, na.rm=FALSE){
+  exp(sum(log(x), na.rm=na.rm) / length(x))
+}
+
+anabelgm$gm <- rep(NA,nrow(anabelgm))
+for (i in 1:nrow(anabelgm)) {
+  anabelgm$gm[i] <- gmn(anabelgm[i,6:12])
+  anabelgm[i,6:12] <- anabelgm[i,6:12]/anabelgm$gm[i]
+}
+
+pcagm_2 <- princomp(log(anabelgm[,(6:12)]), cor=TRUE)
+for (i in 1:7) {
+  pcagm_2$loadings[,i] <- (pcagm_2$loadings[,i] * pcagm_2$sdev[i])
+}
+print(summary(pcagm_2),digits=2) #importance of components
+print(pcagm_2[["loadings"]], cutoff=0) #loadings
+round(pcagm_2$sdev^2,2) #eigenvalues (i.e. squared standard dv)
+
+anabelgm$pc1 <- pcagm_2$scores[,1]
+anabelgm$pc2 <- pcagm_2$scores[,2]
+
+autoplot(pcagm_2, x = 1, y = 2, data = anabelgm, colour = 'Genus', 
+         label = FALSE, size = 2.5, label.size = 3, frame=TRUE) + 
+  ggtitle("PCA labeled by species")
+
+find_hullpcr3 <- function(anabelgm) anabelgm[chull(anabelgm$pc1, anabelgm$pc2), ]
+hullspcr3 <- ddply(anabelgm, "Genus", find_hullpcr3)
+m <- c("grey90", "grey60")
+
+pcaplotgm <- ggplot(data = anabelgm, aes(x=pc1, y=pc2, group=Genus)) + 
+  geom_polygon(data=hullspcr3, alpha=0.5, 
+               aes(x=pc1, y=pc2, group=Genus, fill=Genus, linetype=Genus), 
+               color="black") + 
+  geom_point(aes(shape=Genus), fill="white", size=3) + 
+  scale_fill_manual(values=m, guide="none") + theme_bw() + 
+  scale_shape_manual(values = c(23,16), 
+                     guide = guide_legend(label.theme = element_text(angle = 0, 
+                                                                     face = "plain", 
+                                                                     size=8))) + 
+  geom_vline(aes(xintercept = 0), size=0.25) + 
+  scale_linetype_manual(values=c(2,1)) + 
+  geom_hline(aes(yintercept = 0), size=0.25) + 
+  xlab("PC1 (73.30%)") + ylab("PC2 (20.11%)") + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(legend.box = "vertical", legend.position = c(0.73,0.88), 
+        legend.spacing.x = unit(2, 'mm'), legend.text=element_text(size=1), 
+        legend.key.size = unit(1, 'mm'), legend.title = element_blank())  + 
+  theme(axis.text = element_text(color="black", size=6),
+        axis.title = element_text(size=8)) + 
+  guides(shape = guide_legend(byrow = TRUE, 
+                              label.theme = element_text(angle = 0, 
+                                                         face = "italic", 
+                                                         size=8))) + 
+  theme(legend.spacing.y = unit(2, "mm")) + guides(fill="none", linetype="none")
+
+pcaplotgm
+```
+
+```{r}
+#species PCA 2 (all species)
+#UTL, BB, LPL, PBPL, MH, MCW, MCH
+
+pca2 <- princomp(all[,(6:12)], cor=TRUE)
+all$pc1 <- pca2$scores[,1]
+all$pc2 <- pca2$scores[,2]
+
+all$Species[all$Species == "ellioti"] <- "A. ellioti"
+all$Species[all$Species == "belangeri"] <- "T. belangeri"
+all$Species[all$Species == "glis"] <- "T. glis"
+all$Species[all$Species == "minor"] <- "T. minor"
+all$Species[all$Species == "palawanensis"] <- "T. palawanensis"
+all$Species[all$Species == "tana"] <- "T. tana"
+all$Species[all$Species == "lowii"] <- "P. lowii"
+all$Species[all$Species == "melanura"] <- "D. melanura"
+
+all$Genus <- as.factor(all$Genus)
+all$Genus <- relevel(all$Genus, ref="Tupaia")
+
+for (i in 1:7) {
+  pca2$loadings[,i] <- (pca2$loadings[,i] * pca2$sdev[i])
+}
+
+print(summary(pca2),digits=2) #importance of components
+print(pca2[["loadings"]], cutoff=0) #loadings
+round(pca2$sdev^2,2) #eigenvalues (i.e. squared standard dv)
+
+find_hullpcr2 <- function(all) all[chull(all$pc1, all$pc2), ]
+hullspcr2 <- ddply(all, "Genus", find_hullpcr2)
+n <- c("grey90", "grey30", "grey80", "grey50")
+
+pcaplot2 <- ggplot(data = all, aes(x=pc1, y=pc2, group=Genus)) + 
+  geom_polygon(data=hullspcr2, alpha=1, 
+               aes(x=pc1, y=pc2, group=Genus, fill=Genus), size=0.2, color="black") + 
+  geom_point(aes(shape=Species), fill="white", size=2) + 
+  scale_fill_manual(values=n,guide="none") + theme_bw() + 
+  scale_shape_manual(values = c(23,8,21,16,22,17,15,25), 
+                     guide = guide_legend(label.theme = element_text(angle = 0, 
+                                                                     face = "plain", 
+                                                                     size=10))) + 
+  geom_vline(aes(xintercept = 0), size=0.25) + 
+  geom_hline(aes(yintercept = 0), size=0.25) + 
+  xlab("PC1 (86.25%)") + ylab("PC2 (7.80%)") + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(legend.box = "horizontal", legend.position = c(0.297,0.886), 
+        legend.spacing.x = unit(2, 'mm'), legend.text=element_text(size=1), 
+        legend.key.size = unit(1, 'mm'), legend.title = element_blank()) + 
+  theme(axis.text = element_text(color="black", size=6),
+        axis.title = element_text(size=8)) + 
+  guides(shape = guide_legend(byrow = TRUE, ncol=2, 
+                              label.theme = element_text(angle = 0, 
+                                                         face = "italic", 
+                                                         size=5.5)),
+         color=guide_legend(override.aes=list(fill=NA))) + 
+  theme(legend.spacing.y = unit(1, "mm"),
+        legend.background = element_blank()) + guides(fill="none") + ylim(c(-2,3.6))
+
+#ggsave("PCA2.png", width = 6.5, height = 4, bg="white")
+
+fig2 <- ggarrange(pcaplot, pcaplotgm, pcaplot2, labels = c("a", "b", "c"), widths = c(0.7, 1), 
+                  align="v",ncol=1)
+#ggsave("Fig2.tiff", width = 84, height = 234, dpi=600, units= "mm", bg="white")
+```
+
+```{r}
+#subspecies PCA
+#UTL, BB, LPL, PBPL, MH, MCW, MCH
+
+pca3 <- princomp(log(ana[,(6:12)]), cor=TRUE)
+ana$pc1 <- pca3$scores[,1]
+ana$pc2 <- pca3$scores[,2]
+
+ana$Subspecies[ana$Subspecies == "ellioti"] <- "ellioti"
+ana$Subspecies[ana$Subspecies == "pallida"] <- '"pallida"'
+ana$Subspecies[ana$Subspecies == "wroughtoni"] <- '"wroughtoni"'
+ana$Subspecies <- relevel(factor(ana$Subspecies), ref="ellioti")
+
+for (i in 1:7) {
+  pca3$loadings[,i] <- (pca3$loadings[,i] * pca3$sdev[i])
+}
+
+print(summary(pca3),digits=2) #importance of components
+print(pca3[["loadings"]], cutoff=0) #loadings
+round(pca3$sdev^2,2) #eigenvalues (i.e. squared standard dv)
+
+find_hullpcr3 <- function(ana) ana[chull(ana$pc1, ana$pc2), ]
+hullspcr3 <- ddply(ana, "Subspecies", find_hullpcr3)
+m <- c("white", "grey90", "white")
+
+pcaplot3 <- ggplot(data = ana, aes(x=pc1, y=pc2, group=Subspecies)) + 
+  geom_polygon(data=hullspcr3, alpha=1, 
+               aes(x=pc1, y=pc2, group=Subspecies, fill=Subspecies, 
+                   linetype=Subspecies), color="black") + 
+  geom_point(aes(shape=Subspecies), fill="grey", size=4) + 
+  scale_fill_manual(values=m) + theme_bw() + 
+  scale_shape_manual(values = c(19,15,17), 
+                     guide = guide_legend(label.theme = element_text(angle = 0, 
+                                                                     face = "plain", 
+                                                                     size=15))) + 
+  geom_vline(aes(xintercept = 0), size=0.25) + 
+  scale_linetype_manual(values=c(2,1,3)) + 
+  geom_hline(aes(yintercept = 0), size=0.25) + 
+  xlab("PC1 (47.41%)") + ylab("PC2 (32.95%)") + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme(legend.box = "vertical", legend.position = c(0.17,0.22), 
+        legend.spacing.x = unit(1, 'mm'), legend.text=element_text(size=8), 
+        legend.key.size = unit(3.5, 'mm'), legend.title = element_blank(),
+        legend.margin = margin(0, 0, 0, 0)) +
+  theme(axis.text = element_text(color="black", size=6),
+        axis.title = element_text(size=8)) + 
+  guides(shape = guide_legend(byrow = TRUE, 
+                              label.theme = element_text(angle = 0, 
+                                                         face = "italic", 
+                                                         size=10))) + 
+  theme(legend.spacing.y = unit(2, "mm")) + guides(fill="none", linetype="none")
+
+#ggsave("PCA3.png", width = 6.5, height = 4, bg="white")
+
+fig3 <- ggarrange(pcaplot3, map2, labels = c("a", "b"), widths = c(1, 0.5))
+#ggsave("Fig3.tiff", width = 174, height = 70, dpi=600, units= "mm", bg="white")
+```
+
+
